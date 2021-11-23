@@ -1430,20 +1430,36 @@ pColdSigningKeyFile =
       )
     )
 
-pRequiredSigner :: Parser WitnessSigningData
+pRequiredSigner :: Parser RequiredSigner
 pRequiredSigner =
-    KeyWitnessSigningData
-      <$>
-        ( SigningKeyFile <$>
-            Opt.strOption
-              (  Opt.long "required-signer"
-              <> Opt.metavar "FILE"
-              <> Opt.help "Input filepath of the signing key (zero or more) whose \
-                          \signature is required."
-              <> Opt.completer (Opt.bashCompleter "file")
-              )
-        )
-      <*> pure Nothing
+      RequiredSignerSkeyFile <$> sKeyFile
+  <|> RequiredSignerHash <$> sPayKeyHash
+  <|> RequiredSignerHashExtended <$> sExtendedPayKeyHash
+ where
+  sKeyFile :: Parser SigningKeyFile
+  sKeyFile = SigningKeyFile <$>
+    Opt.strOption
+      (  Opt.long "required-signer"
+      <> Opt.metavar "FILE"
+      <> Opt.help "Input filepath of the signing key (zero or more) whose \
+                  \signature is required."
+      <> Opt.completer (Opt.bashCompleter "file")
+      )
+  sPayKeyHash :: Parser (Hash PaymentKey)
+  sPayKeyHash =
+    Opt.option (readerFromParsecParser $ parseHash (AsHash AsPaymentKey))
+      (  Opt.long "required-signer-hash"
+      <> Opt.metavar "HASH"
+      <> Opt.help "Hash of the verification key (zero or more) whose \
+                  \signature is required."
+      )
+  sExtendedPayKeyHash :: Parser (Hash PaymentExtendedKey)
+  sExtendedPayKeyHash =
+    Opt.option (readerFromParsecParser $ parseHash (AsHash AsPaymentExtendedKey))
+      (  Opt.long "required-signer-hash"
+      <> Opt.hidden
+      )
+
 
 pSomeWitnessSigningData :: Parser [WitnessSigningData]
 pSomeWitnessSigningData =
@@ -1911,7 +1927,7 @@ pTxOutDatum =
   where
     pTxOutDatumByHashOnly =
       TxOutDatumByHashOnly <$>
-        Opt.option (readerFromParsecParser parseHashScriptData)
+        Opt.option (readerFromParsecParser $ parseHash (AsHash AsScriptData))
           (  Opt.long "tx-out-datum-hash"
           <> Opt.metavar "HASH"
           <> Opt.help "The script datum hash for this tx output, as \
