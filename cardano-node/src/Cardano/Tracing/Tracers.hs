@@ -57,7 +57,7 @@ import           Cardano.BM.Trace (traceNamedObject)
 import           Cardano.BM.Tracing
 
 import           Ouroboros.Consensus.Block (BlockConfig, BlockProtocol, CannotForge, ConvertRawHash,
-                   ForgeStateInfo, ForgeStateUpdateError, Header, realPointSlot)
+                   ForgeStateInfo, ForgeStateUpdateError, Header)
 import           Ouroboros.Consensus.BlockchainTime (SystemStart (..),
                    TraceBlockchainTimeEvent (..))
 import           Ouroboros.Consensus.HeaderValidation (OtherHeaderEnvelopeError)
@@ -83,7 +83,7 @@ import           Ouroboros.Network.Block (BlockNo (..), HasHeader (..), Point, S
 import           Ouroboros.Network.BlockFetch.ClientState (TraceLabelPeer (..), TraceFetchClientState (..))
 import           Ouroboros.Network.BlockFetch.Decision (FetchDecision, FetchDecline (..))
 import           Ouroboros.Network.ConnectionId (ConnectionId)
-import           Ouroboros.Network.Point (fromWithOrigin, withOrigin)
+import           Ouroboros.Network.Point (fromWithOrigin)
 import           Ouroboros.Network.Protocol.LocalStateQuery.Type (ShowQuery)
 import           Ouroboros.Network.InboundGovernor.State (InboundGovernorCounters(..))
 import           Ouroboros.Network.InboundGovernor (InboundGovernorTrace(..))
@@ -243,16 +243,12 @@ instance ElidingTracer (WithSeverity (ChainDB.TraceEvent blk)) where
       return (Just ev, count)
   conteliding _tverb _tr ev@(WithSeverity _ (ChainDB.TraceGCEvent _)) (_old, count) =
       return (Just ev, count)
-  conteliding _tverb tr ev@(WithSeverity _ (ChainDB.TraceLedgerReplayEvent (LedgerDB.ReplayedBlock pt [] replayTo))) (_old, count) = do
-      let slotno = toInteger $ unSlotNo (realPointSlot pt)
-          endslot = toInteger $ withOrigin 0 unSlotNo (pointSlot replayTo)
-          startslot = if count == 0 then slotno else toInteger count
-          progress :: Double = (fromInteger slotno * 100.0) / fromInteger (max slotno endslot)
-      when (count > 0 && (slotno - startslot) `mod` 1000 == 0) $ do  -- report every 1000th slot
-          meta <- mkLOMeta (getSeverityAnnotation ev) (getPrivacyAnnotation ev)
-          traceNamedObject tr (meta, LogValue "block replay progress (%)" (PureD (fromInteger (round (progress * 10.0)) / 10.0)))
-      return (Just ev, fromInteger startslot)
+  conteliding _tverb _tr ev@(WithSeverity _ (ChainDB.TraceLedgerReplayEvent (LedgerDB.ReplayedBlock {}))) (_old, count) = do
+      return (Just ev, count)
   conteliding _ _ _ _ = return (Nothing, 0)
+
+  reportelided _tverb _tr (WithSeverity _ (ChainDB.TraceLedgerReplayEvent (LedgerDB.ReplayedBlock{}))) _count = pure ()
+  reportelided t tr ev count = defaultelidedreporting  t tr ev count
 
 instance (StandardHash header, Eq peer) => ElidingTracer
   (WithSeverity [TraceLabelPeer peer (FetchDecision [Point header])]) where

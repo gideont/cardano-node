@@ -425,12 +425,21 @@ instance ( ConvertRawHash blk
         LedgerDB.ReplayFromGenesis _replayTo ->
           "Replaying ledger from genesis"
         LedgerDB.ReplayFromSnapshot snap tip' _replayTo ->
-          "Replaying ledger from snapshot " <> showT snap <> " at " <>
+          "Replaying ledger from snapshot at " <>
             renderRealPointAsPhrase tip'
-        LedgerDB.ReplayedBlock pt _ledgerEvents replayTo ->
-          "Replayed block: slot " <> showT (unSlotNo $ realPointSlot pt)
-                                  <> " out of "
-                                  <> showT (withOrigin 0 Prelude.id $ unSlotNo <$> pointSlot replayTo)
+        LedgerDB.ReplayedBlock pt _ledgerEvents (replayFrom, replayTo) ->
+          let from = withOrigin 0 Prelude.id $ unSlotNo <$> pointSlot replayFrom
+              atPt = unSlotNo $ realPointSlot pt
+              at   = atPt - from
+              toPt = withOrigin 0 Prelude.id $ unSlotNo <$> pointSlot replayTo
+              to   = toPt - from
+             "Replayed block: slot "
+          <> showT atPt
+          <> " out of "
+          <> showT atPt
+          <> ". Progress: "
+          <> showProgressT (fromIntegral at) (fromIntegral to)
+          <> "%"
       ChainDB.TraceLedgerEvent ev -> case ev of
         LedgerDB.TookSnapshot snap pt ->
           "Took ledger snapshot " <> showT snap <>
@@ -766,7 +775,7 @@ instance ( ConvertRawHash blk
     LedgerDB.ReplayedBlock pt _ledgerEvents replayTo ->
       mkObject [ "kind" .= String "TraceLedgerReplayEvent.ReplayedBlock"
                , "slot" .= unSlotNo (realPointSlot pt)
-               , "tip"  .= withOrigin 0 unSlotNo (pointSlot replayTo) ]
+               , "tip"  .= withOrigin 0 unSlotNo (pointSlot $ snd replayTo) ]
 
   toObject MinimalVerbosity (ChainDB.TraceLedgerEvent _ev) = emptyObject -- no output
   toObject verb (ChainDB.TraceLedgerEvent ev) = case ev of
