@@ -1,6 +1,6 @@
 module Cardano.Tracer.Handlers.RTView.UI.Utils
   ( (##)
-  , dataAttr
+  , dataTooltip
   , findAndDo
   , image
   , showIt
@@ -38,11 +38,8 @@ showInline = set style [("display", "inline")]
 hideIt     = set style [("display", "none")]
 
 pageTitle, pageTitleNotify :: String
-pageTitle       = "RTView"
-pageTitleNotify = "(!) RTView"
+pageTitle       = "Cardano RTView"
+pageTitleNotify = "(!) Cardano RTView"
 
-dataAttr :: String -> Attr Element String
-dataAttr name = mkReadWriteAttr getData setData
- where
-  getData   el = callFunction $ ffi "$(%1).data(%2)" el name
-  setData v el = runFunction  $ ffi "$(%1).data(%2,%3)" el name v
+dataTooltip :: WriteAttr Element String
+dataTooltip = mkWriteAttr $ set' (attr "data-tooltip")

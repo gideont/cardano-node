@@ -13,7 +13,7 @@ import qualified Graphics.UI.Threepenny as UI
 import           Graphics.UI.Threepenny.Core (UI, on, set, (#), (#+))
 
 import           Cardano.Tracer.Configuration
-import           Cardano.Tracer.Handlers.RTView.UI.CSS.Bulma (bulmaCSS)
+import           Cardano.Tracer.Handlers.RTView.UI.CSS.Bulma (bulmaCSS, bulmaTooltipCSS)
 import           Cardano.Tracer.Handlers.RTView.UI.CSS.Own (ownCSS)
 import           Cardano.Tracer.Handlers.RTView.UI.HTML.PageBody (mkPageBody)
 import           Cardano.Tracer.Handlers.RTView.UI.Updater (updateUI)
@@ -48,6 +48,7 @@ mkMainPage connectedNodes acceptedMetrics _dpAskers window = do
     [ -- UI.link # set UI.rel "icon" # set UI.href "..." -- TODO: add SVG favicon.
       UI.meta # set UI.name "viewport" # set UI.content "width=device-width, initial-scale=1"
     , UI.mkElement "style" # set UI.html bulmaCSS
+    , UI.mkElement "style" # set UI.html bulmaTooltipCSS
     , UI.mkElement "style" # set UI.html ownCSS
     -- , UI.mkElement "script" # set UI.html chartJS
     ]

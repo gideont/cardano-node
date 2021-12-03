@@ -17,7 +17,11 @@ mkPageBody window =
         [ UI.div #. "container is-max-widescreen has-text-centered" #+
             [ image "rt-view-no-nodes-icon" noNodesSVG
             , UI.p #. "rt-view-no-nodes-message" #+
-                [ string "There are no connected nodes. Yet." ]
+                [ string "There are no connected nodes. Yet."
+                , UI.button #. "button is-primary"
+                            # set dataTooltip "Tooltip Text"
+                            #+ [string "Tooltip"]
+                ]
             ]
         , UI.div #. "container is-max-widescreen" #+ []
         ]
