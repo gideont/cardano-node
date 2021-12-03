@@ -15,6 +15,7 @@ import           Cardano.Tracer.CLI (TracerParams (..))
 import           Cardano.Tracer.Configuration (TracerConfig, readTracerConfig)
 import           Cardano.Tracer.Handlers.Logs.Rotator (runLogsRotator)
 import           Cardano.Tracer.Handlers.Metrics.Servers (runMetricsServers)
+import           Cardano.Tracer.Handlers.RTView.Run (runRTView)
 import           Cardano.Tracer.Types (ProtocolsBrake)
 import           Cardano.Tracer.Utils (initAcceptedMetrics, initConnectedNodes,
                    initDataPointAskers, initProtocolsBrake)
@@ -38,5 +39,6 @@ doRunCardanoTracer config protocolsBrake = do
   void . sequenceConcurrently $
     [ runLogsRotator    config currentLogLock
     , runMetricsServers config connectedNodes acceptedMetrics
+    , runRTView         config connectedNodes acceptedMetrics dpAskers
     , runAcceptors      config connectedNodes acceptedMetrics dpAskers protocolsBrake currentLogLock
     ]
